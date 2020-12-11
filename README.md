@@ -5,11 +5,12 @@ This package intends to implement heuristics for the Travelling Salesman Problem
 
 ## Proposed Heuristics
 
-- Simulated Annealing
-- Genetic Algorithms
+- [Simulated Annealing](https://en.wikipedia.org/wiki/Simulated_annealing)
+- [Genetic Algorithms](https://en.wikipedia.org/wiki/Genetic_algorithm)
+- [Tabu Search?](https://en.wikipedia.org/wiki/Tabu_search)
 
 ## Proposed Visualizations
 
-- Animation of historic TSP tours (networkx/matplotlib)
-- Line graph of historical tour lengths with best tour annotated (plotnine)
+- Animation of historic TSP tours (`networkx`/`matplotlib`)
+- Line graph of historical tour lengths with best tour annotated (`plotnine`)
 - `networkx` drawing of best tour
