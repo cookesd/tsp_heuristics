@@ -21,3 +21,25 @@ for node in tsp1:
 print('Enumerating nodes')
 for i,node in enumerate(tsp1):
     print('Node {} is {}'.format(i+1,node))
+    
+print('Adding nodes')
+
+print('Adding with no distances')
+tsp1.add_nodes({'new_node1':{}},default=47)
+print(tsp1.nodes)
+print(tsp1.dist_dod)
+
+print('Adding with distances')
+tsp1.add_nodes({'new_node2':{node:13 for node in tsp1.nodes}})
+print(tsp1.nodes)
+print(tsp1.dist_dod)
+
+
+print('Updating dist_dod')
+# change all distances from new_node1 to 50
+# all distances to new_node1 to 100
+tsp1.add_nodes({**{'new_node1':{node:50 for node in tsp1.nodes.difference(set(['new_node1']))}},
+                **{node:{'new_node1':100} for node in tsp1.nodes.difference(set(['new_node1']))}})
+print(tsp1.dist_dod['new_node1'])
+print({node:tsp1.dist_dod[node]['new_node1']
+       for node in tsp1.nodes.difference(set(['new_node1']))})
