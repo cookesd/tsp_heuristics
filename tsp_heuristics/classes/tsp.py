@@ -385,7 +385,7 @@ class TSPTour(object):
     
     def __init__(self,tsp,tour_list):
         self.tour_list = tour_list
-        self.dist_dod = tsp.dist_dod
+        self.tsp = tsp
         self.distance = self.get_distance()
         
     def __iter__(self):
@@ -400,29 +400,153 @@ class TSPTour(object):
                                                                  self.distance))
         
     def get_distance(self):
-        return(sum([self.dist_dod[self.tour_list[i]][self.tour_list[i+1]]
+        return(sum([self.tsp.dist_dod[self.tour_list[i]][self.tour_list[i+1]]
                     for i in range(len(self.tour_list)-1)]
                    # distance from last node back to the start
-                   + [self.dist_dod[self.tour_list[-1]][self.tour_list[0]]]))
+                   + [self.tsp.dist_dod[self.tour_list[-1]][self.tour_list[0]]]))
     
-    def two_swap(self):
-        nodes_to_swap = random.sample(range(len(self.tour_list)),2)
+    
+    def _get_add_del_edges(self, replace_dict):
+        '''
+        Create sets of edges to add and delete based on tour_list and replace_dict
         
-        # new_dist = self.distance
+
+        Parameters
+        ----------
+        replace_dict : dict
+            Dict with keys being tour indices to replace and values being the
+            the indices to replace them with.
+
+        Returns
+        -------
+        add_del_edge_dict : dict
+            Dict with keys {'add','delete'}. Values are sets of edges to add
+            and delete (respectively). Every occurrence of an index in replace_dict.keys()
+            is replaced with its provided value.
+
+        '''
         
-        # ind_dist = abs(nodes_to_swap[0] - nodes_to_swap[1])
-        
-        # for ind in nodes_to_swap:
-        #     if ind == 0:
-        #         new_dist -= self.dist_dod[ind][]
-        #     elif ind == len(self.tour_list) - 1:
+        node_inds_to_swap = replace_dict.keys()
+        # use sets to prevent double counting edges if nodes right next to each other
+        edges_to_delete = set() # the current (unique) edges connected to the nodes we want to swap
+        edges_to_add = set() # the edges we want to add to put nodes in their new positions
+        for ind in node_inds_to_swap:
+            if ind == 0:
+                edges_to_delete.add([ind,ind + 1])
+                edges_to_delete.add([len(self.tour_list) - 1,ind])
                 
-        #     else:
+                edges_to_add.add([replace_dict[ind], ind + 1])
+                edges_to_add.add([len(self.tour_list) - 1,replace_dict[ind]])
+            elif ind == len(self.tour_list) - 1:
+                edges_to_delete.add([ind,0])
+                edges_to_delete.add([ind - 1, ind])
+                
+                edges_to_add.add([replace_dict[ind],0])
+                edges_to_add.add([ind - 1, replace_dict[ind]])
+            else:
+                edges_to_delete.add([ind,ind + 1])
+                edges_to_delete.add([ind - 1, ind])
+                
+                edges_to_add.add([replace_dict[ind], ind + 1])
+                edges_to_add.add([ind - 1, replace_dict[ind]])
+                
+        return({'add':edges_to_add,
+                'delete':edges_to_delete})
+        
+        
+    def two_swap(self):
+        node_inds_to_swap = random.sample(range(len(self.tour_list)),2)
+        # dictionary saying which node ind to replace each other node ind with
+        replace_dict = {node_inds_to_swap[0]:node_inds_to_swap[1],
+                        node_inds_to_swap[1]:node_inds_to_swap[0]}
+        
+        
+        add_del_edge_dict = self._get_add_del_edges(replace_dict)
+        edges_to_add = add_del_edge_dict['add']
+        edges_to_delete = add_del_edge_dict['delete']
+        
+        # add the distance of the edges to add and
+        # subtract the distance of edges to delete
+        new_distance = (self.distance 
+                        - sum([self.tsp.dist_dod[del_u][del_v] for del_u,del_v in edges_to_delete])
+                        + sum([self.tsp.dist_dod[add_u][add_v] for add_u,add_v in edges_to_add])
+                        )
+        self.distance = new_distance
+        
                 
         # swap the nodes
-        self.tour_list[nodes_to_swap[0]], self.tour_list[nodes_to_swap[1]] = self.tour_list[nodes_to_swap[1]], self.tour_list[nodes_to_swap[0]]
+        self.tour_list[node_inds_to_swap[0]], self.tour_list[node_inds_to_swap[1]] = self.tour_list[node_inds_to_swap[1]], self.tour_list[node_inds_to_swap[0]]
         
-        self.distance = self.get_distance()
+        
+    def n_swap(self,n):
+        '''
+        Swap n random nodes in the tour. Internally update tour_list and distance.
+        
+        Select n random nodes in the tour and randomly swap them so no node
+        ends up in the same location.
+
+        Parameters
+        ----------
+        n : int
+            The number of nodes to swap (must be between 2 and len(self.tour_list)).
+            Swapping 0 or 1 nodes, doesn't effectively change the tour so not allowed.
+
+        Returns
+        -------
+        None.
+
+        '''
+        
+        # change n so it throws an error for n =  0 or 1 
+        if n in [0,1]:
+            n = -1
+        try:
+            node_inds_to_swap = random.sample(range(len(self.tour_list)),n)
+        except (ValueError, TypeError):
+            print('{} is not a valid value for n. It must be an integer between 2 and size of the graph'.format(n))
+        
+        inds_left_to_swap = node_inds_to_swap.copy()
+        
+        replace_dict = {} # keys are indices to fill, values are indices to fill with
+        
+        for curr_ind in node_inds_to_swap:
+            poss_inds_to_swap = list(set(node_inds_to_swap).difference({curr_ind}))
+            if len(poss_inds_to_swap) == 0:
+                # the last index left to switch is itself
+                # so replace with something that was already switched
+                # to prevent things from ending up in same place
+                rand_new_ind = random.choice(poss_inds_to_swap)
+                replace_dict[curr_ind] = rand_new_ind
+                replace_dict[rand_new_ind] = curr_ind
+                inds_left_to_swap.remove(curr_ind)
+            # we have a different index to place here, but only 1
+            elif len(poss_inds_to_swap) == 1:
+                replace_dict[curr_ind] = inds_left_to_swap[0]
+                inds_left_to_swap.remove(inds_left_to_swap[0])
+            else:
+                rand_new_ind = random.choice(poss_inds_to_swap)
+                replace_dict[curr_ind] = rand_new_ind
+                inds_left_to_swap.remove(rand_new_ind)
+            
+        
+        add_del_edge_dict = self._get_add_del_edges(replace_dict)
+        edges_to_add = add_del_edge_dict['add']
+        edges_to_delete = add_del_edge_dict['delete']
+        
+        # add the distance of the edges to add and
+        # subtract the distance of edges to delete
+        new_distance = (self.distance 
+                        - sum([self.tsp.dist_dod[del_u][del_v] for del_u,del_v in edges_to_delete])
+                        + sum([self.tsp.dist_dod[add_u][add_v] for add_u,add_v in edges_to_add])
+                        )
+        self.distance = new_distance
+        
+        # swap the nodes
+        # tour nodes in indices of dict values get placed in index of tour keys
+        new_tour = self.tour_list.copy()
+        for ind, new_ind in replace_dict.items():
+            new_tour[ind] = self.tour_list[new_ind]
+        self.tour_list = new_tour
         
     @classmethod
     def from_tsp(cls,tsp,funct,**kwargs):
