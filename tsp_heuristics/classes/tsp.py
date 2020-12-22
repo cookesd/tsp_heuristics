@@ -9,6 +9,7 @@ Created on Fri Dec 11 12:12:13 2020
 #%%
 import warnings
 import random
+from copy import copy, deepcopy
 from tsp_heuristics.io.read_data import make_tsp
 from tsp_heuristics.sol_generators import random_tour_list, ordered_tour_list, greedy_tour_list
 
@@ -43,6 +44,29 @@ class TSP(object):
         Number of nodes in the TSP problem
         '''
         return(len(self.nodes))
+    
+    def __copy__(self):
+        if len(self.dist_dod) == 0:
+            incoming_data = None
+        else:
+            incoming_data = self.dist_dod
+        result = type(self)(incoming_data = incoming_data)
+        result.__dict__.update(self.__dict__)
+        return(result)
+    
+    def __deepcopy__(self,memo):
+        if len(self.dist_dod) == 0:
+            incoming_data = None
+        else:
+            incoming_data = self.dist_dod
+        result = type(self)(incoming_data = incoming_data)
+        result.__dict__.update(self.__dict__)
+        
+        memo[id(self)] = result
+        # make deep copies of all attributes
+        for key,value in self.__dict__.items():
+            setattr(result,key,deepcopy(value,memo))
+        return(result)
         
         
     def _get_updated_node_dist_dict_for(self,new_nodes,orig_nodes,node_dist_dict,default=0):
@@ -349,6 +373,20 @@ class TSPTour(object):
         the_string = 'The tour is ({}). \nThe distance is: {}.'.format(', '.join([str(i) for i in self.tour_list]),
                                                                  self.distance)
         return(the_string)
+    
+    def __copy__(self):
+        result = type(self)(tsp = self.tsp,tour_list = self.tour_list)
+        result.__dict__.update(self.__dict__)
+        return(result)
+    
+    def __deepcopy__(self,memo):
+        result = type(self)(tsp = self.tsp,tour_list = self.tour_list)
+        result.__dict__.update(self.__dict__)
+        memo[id(self)] = result
+        # make deep copies of all attributes
+        for key,value in self.__dict__.items():
+            setattr(result,key,deepcopy(value,memo))
+        return(result)
         
     def get_distance(self):
         return(sum([self.tsp.dist_dod[self.tour_list[i]][self.tour_list[i+1]]
@@ -513,10 +551,3 @@ class TSPTour(object):
     
 
        
-#%%
-# bar = TSP({1:{2:13},2:{1:13}})
-# bar.add_nodes({3:{}},default=47)
-# bar.add_nodes({4:{1:1,2:2,3:3},
-#                1:{2:50,4:-1},
-#                2:{4:99}})
-    

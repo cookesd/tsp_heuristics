@@ -8,6 +8,7 @@ Created on Sun Dec 13 15:57:33 2020
 import tsp_heuristics as th
 
 
+
 #%% TSP Test
 my_dod = {0:{1:47,2:13},1:{0:47,2:50},2:{0:13,1:50}}
 tsp1 = th.TSP(incoming_data = my_dod)
