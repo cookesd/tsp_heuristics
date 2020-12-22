@@ -10,6 +10,7 @@ Created on Fri Dec 11 12:12:13 2020
 import warnings
 import random
 from tsp_heuristics.io.read_data import make_tsp
+from tsp_heuristics.sol_generators import random_tour_list, ordered_tour_list, greedy_tour_list
 
 class TSP(object):
     def __init__(self,incoming_data=None):
@@ -288,13 +289,38 @@ class TSP(object):
                                          for other_node in self.nodes.difference(set([node]))}
     
     
-    def make_tour(self,funct = 'random',**kwargs):
+    # def make_tour(self,funct = 'random',**kwargs):
         
-        default_dict = {'random':self.random_tour_list,
-                        'ordered':self.ordered_tour_list,
-                        'greedy':self.greedy_tour_list}
+    #     default_dict = {'random':self.random_tour_list,
+    #                     'ordered':self.ordered_tour_list,
+    #                     'greedy':self.greedy_tour_list}
+    #     default_str = 'random'
+        
+    #     if type(funct) == str:
+    #         if funct not in default_dict.keys():
+    #             warnings.warn('{} is not a valid string function type. It must be one of ({}). Defaulting to {}'.format(funct,
+    #                                                                                                                   ', '.join(default_dict.keys()),
+    #                                                                                                                   default_str))
+    #             funct = default_str
+    #         funct = default_dict[default_str]
+            
+    #     tour = TSPTour.from_tsp(self,funct,**kwargs)
+    #     return(tour)
+    
+    
+            
+        
+class TSPTour(object):
+    
+    
+    @classmethod
+    def from_tsp(cls,tsp,funct,**kwargs):
+        
+        default_dict = {'random':random_tour_list,
+                    'ordered':ordered_tour_list,
+                    'greedy':greedy_tour_list}
         default_str = 'random'
-        
+    
         if type(funct) == str:
             if funct not in default_dict.keys():
                 warnings.warn('{} is not a valid string function type. It must be one of ({}). Defaulting to {}'.format(funct,
@@ -302,86 +328,10 @@ class TSP(object):
                                                                                                                       default_str))
                 funct = default_str
             funct = default_dict[default_str]
-            
-        tour = TSPTour.from_tsp(self,funct,**kwargs)
-        return(tour)
-    
-    def random_tour_list(self):
-        '''
-        Make a random tour (permutation) of the nodes in the TSP
-        
-        Returns
-        -------
-        tour_list : list
-            The list of node visits in this tour; doesn't loop back to starting node.
-        '''
-
-        tour = random.sample(self.nodes,len(self.nodes))
-        return(tour)
+        return(cls(tsp,funct(tsp,**kwargs)))
     
     
-    def ordered_tour_list(self,order=None):
-        '''
-        Return a list of the nodes in the TSP as they are.
-        
-        Simply converts self.nodes into a list
-
-        Returns
-        -------
-        tour_list : list
-            The list of node visits in this tour; doesn't loop back to starting node.
-        '''
-        
-        tour_list = list(self.nodes)
-        return(tour_list)
     
-    def greedy_tour_list(self,start_node=None):
-        '''
-        Return a tour starting at start_node that uses the best possible edge
-        
-        From the starting node, find the closest node and continue to add the closest
-        node successively. If, not provided (or a valid node in the TSP), start_node defaults to a random node
-        
-        Parameters
-        ----------
-        random_node : node in self.nodes
-            The node to begin the greedy search from.
-
-        Returns
-        -------
-        tour_list : list
-            The list of node visits in this tour; doesn't loop back to starting node.
-        '''
-        
-        if start_node not in self.nodes:
-            start_node = random.choice(self.nodes)
-            
-        tour_list = list(start_node)
-            
-        non_visited_nodes = self.nodes.remove(start_node)
-        
-        # recursively add the next best node from the current node
-        while len(non_visited_nodes) > 0:
-            best_dist = None
-            best_node = None
-            poss_edge_dict = self.dist_dod[tour[-1]]
-            
-            # loop through non_visited_nodes and find first node with smallest distance
-            for node in non_visited_nodes:
-                if best_dist == None:
-                    best_dist = poss_edge_dict[node]
-                    best_node = node
-                elif poss_edge_dict[node] < best_dist:
-                    best_dist = poss_edge_dict[node]
-                    best_node = node
-                    
-            # add best node to tour and remove from non_visited_nodes to prevent subtours
-            tour_list.append(best_node)
-            non_visited_nodes.remove(best_node)
-        return(tour_list)
-            
-        
-class TSPTour(object):
     
     def __init__(self,tsp,tour_list):
         self.tour_list = tour_list
@@ -548,9 +498,7 @@ class TSPTour(object):
             new_tour[ind] = self.tour_list[new_ind]
         self.tour_list = new_tour
         
-    @classmethod
-    def from_tsp(cls,tsp,funct,**kwargs):
-        return(cls(tsp,funct(tsp,**kwargs)))
+    
 
        
 #%%
