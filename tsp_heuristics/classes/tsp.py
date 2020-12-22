@@ -346,8 +346,9 @@ class TSPTour(object):
             yield(node)
             
     def __str__(self):
-        return('The tour is ({}). \nThe distance is: {}.'.format(', '.join[self.tour_list],
-                                                                 self.distance))
+        the_string = 'The tour is ({}). \nThe distance is: {}.'.format(', '.join([str(i) for i in self.tour_list]),
+                                                                 self.distance)
+        return(the_string)
         
     def get_distance(self):
         return(sum([self.tsp.dist_dod[self.tour_list[i]][self.tour_list[i+1]]
@@ -382,23 +383,31 @@ class TSPTour(object):
         edges_to_add = set() # the edges we want to add to put nodes in their new positions
         for ind in node_inds_to_swap:
             if ind == 0:
-                edges_to_delete.add([ind,ind + 1])
-                edges_to_delete.add([len(self.tour_list) - 1,ind])
+                edges_to_delete.add(tuple([ind,ind + 1]))
+                edges_to_delete.add(tuple([len(self.tour_list) - 1,ind]))
                 
-                edges_to_add.add([replace_dict[ind], ind + 1])
-                edges_to_add.add([len(self.tour_list) - 1,replace_dict[ind]])
+                edges_to_add.add(tuple([replace_dict[ind], replace_dict.get(ind + 1,
+                                                                            ind + 1)]))
+                edges_to_add.add(tuple([replace_dict.get(len(self.tour_list) - 1,
+                                                         len(self.tour_list) - 1),
+                                        replace_dict[ind]]))
             elif ind == len(self.tour_list) - 1:
-                edges_to_delete.add([ind,0])
-                edges_to_delete.add([ind - 1, ind])
+                edges_to_delete.add(tuple([ind,0]))
+                edges_to_delete.add(tuple([ind - 1, ind]))
                 
-                edges_to_add.add([replace_dict[ind],0])
-                edges_to_add.add([ind - 1, replace_dict[ind]])
+                edges_to_add.add(tuple([replace_dict[ind],replace_dict.get(0,0)]))
+                edges_to_add.add(tuple([replace_dict.get(ind - 1,
+                                                         ind - 1),
+                                        replace_dict[ind]]))
             else:
-                edges_to_delete.add([ind,ind + 1])
-                edges_to_delete.add([ind - 1, ind])
+                edges_to_delete.add(tuple([ind,ind + 1]))
+                edges_to_delete.add(tuple([ind - 1, ind]))
                 
-                edges_to_add.add([replace_dict[ind], ind + 1])
-                edges_to_add.add([ind - 1, replace_dict[ind]])
+                edges_to_add.add(tuple([replace_dict[ind], replace_dict.get(ind + 1,
+                                                                            ind + 1)]))
+                edges_to_add.add(tuple([replace_dict.get(ind - 1,
+                                                         ind - 1),
+                                        replace_dict[ind]]))
                 
         return({'add':edges_to_add,
                 'delete':edges_to_delete})
@@ -448,26 +457,28 @@ class TSPTour(object):
         '''
         
         # change n so it throws an error for n =  0 or 1 
-        if n in [0,1]:
+        if n in [0,1] or n > len(self.tour_list):
+            orig_n = n
             n = -1
         try:
             node_inds_to_swap = random.sample(range(len(self.tour_list)),n)
-        except (ValueError, TypeError):
-            print('{} is not a valid value for n. It must be an integer between 2 and size of the graph'.format(n))
+        except (ValueError, TypeError) as e:
+            print('{} is not a valid value for n. It must be an integer between 2 and size of the graph'.format(orig_n))
+            raise e
         
         inds_left_to_swap = node_inds_to_swap.copy()
         
         replace_dict = {} # keys are indices to fill, values are indices to fill with
         
         for curr_ind in node_inds_to_swap:
-            poss_inds_to_swap = list(set(node_inds_to_swap).difference({curr_ind}))
+            poss_inds_to_swap = list(set(inds_left_to_swap).difference({curr_ind}))
             if len(poss_inds_to_swap) == 0:
                 # the last index left to switch is itself
                 # so replace with something that was already switched
                 # to prevent things from ending up in same place
-                rand_new_ind = random.choice(poss_inds_to_swap)
-                replace_dict[curr_ind] = rand_new_ind
-                replace_dict[rand_new_ind] = curr_ind
+                rand_new_ind = random.choice(list(set(node_inds_to_swap).difference({curr_ind})))
+                replace_dict[curr_ind] = replace_dict[rand_new_ind] # take the dict val for the chosen ind
+                replace_dict[rand_new_ind] = curr_ind # fill the dict val for the chosen ind with this ind
                 inds_left_to_swap.remove(curr_ind)
             # we have a different index to place here, but only 1
             elif len(poss_inds_to_swap) == 1:
@@ -483,11 +494,12 @@ class TSPTour(object):
         edges_to_add = add_del_edge_dict['add']
         edges_to_delete = add_del_edge_dict['delete']
         
+        
         # add the distance of the edges to add and
         # subtract the distance of edges to delete
         new_distance = (self.distance 
-                        - sum([self.tsp.dist_dod[del_u][del_v] for del_u,del_v in edges_to_delete])
-                        + sum([self.tsp.dist_dod[add_u][add_v] for add_u,add_v in edges_to_add])
+                        - sum([self.tsp.dist_dod[self.tour_list[del_u]][self.tour_list[del_v]] for del_u,del_v in edges_to_delete])
+                        + sum([self.tsp.dist_dod[self.tour_list[add_u]][self.tour_list[add_v]] for add_u,add_v in edges_to_add])
                         )
         self.distance = new_distance
         

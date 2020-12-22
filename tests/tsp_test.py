@@ -51,3 +51,10 @@ print({node:tsp1.dist_dod[node]['new_node1']
 random_tour = th.TSPTour.from_tsp(tsp1,'random')
 ordered_tour = th.TSPTour.from_tsp(tsp1,'ordered')
 greedy_tour = th.TSPTour.from_tsp(tsp1,'greedy')
+
+print(random_tour)
+# random_tour.n_swap(0)
+for n in range(2,len(random_tour.tour_list)+1):
+    random_tour.n_swap(n)
+    print('n: {} \nnew_tour: {} \n'.format(n,random_tour))
+    print()
