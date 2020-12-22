@@ -358,9 +358,29 @@ class TSPTour(object):
     
     
     def __init__(self,tsp,tour_list):
-        self.tour_list = tour_list
+        self._tour_list = tour_list
         self.tsp = tsp
         self.distance = self.get_distance()
+        
+    @property
+    def tour_list(self):
+        return(self._tour_list)
+    
+    @tour_list.setter
+    def tour_list(self,tour_list_data):
+        if isinstance(tour_list_data,dict):
+            try:
+                self._tour_list = tour_list_data['tour']
+                self.distance = tour_list_data.get('distance',self.get_distance())
+            except KeyError as e:
+                print('Setting tour_list accepts the tour list as an iterable or a dict with keys {"tour","distance"}. "distance" key is optional')
+        else:
+            self._tour_list = tour_list_data
+            self.distance = self.get_distance()
+            
+    @tour_list.getter
+    def tour_list(self):
+        return(self._tour_list)
         
     def __iter__(self):
         '''
@@ -468,11 +488,15 @@ class TSPTour(object):
                         - sum([self.tsp.dist_dod[del_u][del_v] for del_u,del_v in edges_to_delete])
                         + sum([self.tsp.dist_dod[add_u][add_v] for add_u,add_v in edges_to_add])
                         )
-        self.distance = new_distance
+        # self.distance = new_distance
         
                 
         # swap the nodes
-        self.tour_list[node_inds_to_swap[0]], self.tour_list[node_inds_to_swap[1]] = self.tour_list[node_inds_to_swap[1]], self.tour_list[node_inds_to_swap[0]]
+        new_tour = self.tour_list.copy()
+        new_tour[node_inds_to_swap[0]], new_tour[node_inds_to_swap[1]] = new_tour[node_inds_to_swap[1]], new_tour[node_inds_to_swap[0]]
+        
+        # update the tour list and distance using the tour_list setter
+        self.tour_list = {'tour':new_tour,'distance':new_distance}
         
         
     def n_swap(self,n):
@@ -539,14 +563,16 @@ class TSPTour(object):
                         - sum([self.tsp.dist_dod[self.tour_list[del_u]][self.tour_list[del_v]] for del_u,del_v in edges_to_delete])
                         + sum([self.tsp.dist_dod[self.tour_list[add_u]][self.tour_list[add_v]] for add_u,add_v in edges_to_add])
                         )
-        self.distance = new_distance
+        # self.distance = new_distance
         
         # swap the nodes
         # tour nodes in indices of dict values get placed in index of tour keys
         new_tour = self.tour_list.copy()
         for ind, new_ind in replace_dict.items():
             new_tour[ind] = self.tour_list[new_ind]
-        self.tour_list = new_tour
+            
+        # update the tour list and distance using the tour_list setter
+        self.tour_list = {'tour':new_tour,'distance':new_distance}
         
     
 
