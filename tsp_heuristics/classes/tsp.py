@@ -407,6 +407,40 @@ class TSPTour(object):
         for key,value in self.__dict__.items():
             setattr(result,key,deepcopy(value,memo))
         return(result)
+    
+    def __eq__(self,tour2):
+        '''
+        Returns True if tour_lists are same size and all nodes are in same order
+        Don't have to have same start node
+        '''
+        if len(self.tour_list) != len(tour2.tour_list):
+            return(False)
+        elif len(set(self.tour_list).difference(set(tour2.tour_list))) > 0:
+            return(False)
+        else:
+            # the index in second tour list that has this tours first item
+            first_node_ind = tour2.tour_list.index(self.tour_list[0])
+            if first_node_ind == 0:
+                reordered_list = tour2.tour_list
+            else:
+                # reorder the second tour list so we start with the same ourder as this tour list
+                reordered_list = tour2.tour_list[first_node_ind:len(tour2.tour_list)] + tour2.tour_list[0:first_node_ind]
+                return(all([i==j for i,j in zip(self.tour_list,reordered_list)]))
+            
+    def __ne__(self,tour2):
+        return(not self.__eq__(tour2))
+    
+    def __lt__(self,tour2):
+        return(self.distance < tour2.distance)
+    
+    def __gt__(self,tour2):
+        return(self.distance > tour2.distance)
+    
+    def __le__(self,tour2):
+        return(self.distance <= tour2.distance)
+    
+    def __ge__(self,tour2):
+        return(self.distance >= tour2.distance)
         
     def get_distance(self):
         return(sum([self.tsp.dist_dod[self.tour_list[i]][self.tour_list[i+1]]
@@ -471,32 +505,32 @@ class TSPTour(object):
                 'delete':edges_to_delete})
         
         
-    def two_swap(self):
-        node_inds_to_swap = random.sample(range(len(self.tour_list)),2)
-        # dictionary saying which node ind to replace each other node ind with
-        replace_dict = {node_inds_to_swap[0]:node_inds_to_swap[1],
-                        node_inds_to_swap[1]:node_inds_to_swap[0]}
+    # def two_swap(self):
+    #     node_inds_to_swap = random.sample(range(len(self.tour_list)),2)
+    #     # dictionary saying which node ind to replace each other node ind with
+    #     replace_dict = {node_inds_to_swap[0]:node_inds_to_swap[1],
+    #                     node_inds_to_swap[1]:node_inds_to_swap[0]}
         
         
-        add_del_edge_dict = self._get_add_del_edges(replace_dict)
-        edges_to_add = add_del_edge_dict['add']
-        edges_to_delete = add_del_edge_dict['delete']
+    #     add_del_edge_dict = self._get_add_del_edges(replace_dict)
+    #     edges_to_add = add_del_edge_dict['add']
+    #     edges_to_delete = add_del_edge_dict['delete']
         
-        # add the distance of the edges to add and
-        # subtract the distance of edges to delete
-        new_distance = (self.distance 
-                        - sum([self.tsp.dist_dod[del_u][del_v] for del_u,del_v in edges_to_delete])
-                        + sum([self.tsp.dist_dod[add_u][add_v] for add_u,add_v in edges_to_add])
-                        )
-        # self.distance = new_distance
+    #     # add the distance of the edges to add and
+    #     # subtract the distance of edges to delete
+    #     new_distance = (self.distance 
+    #                     - sum([self.tsp.dist_dod[del_u][del_v] for del_u,del_v in edges_to_delete])
+    #                     + sum([self.tsp.dist_dod[add_u][add_v] for add_u,add_v in edges_to_add])
+    #                     )
+    #     # self.distance = new_distance
         
                 
-        # swap the nodes
-        new_tour = self.tour_list.copy()
-        new_tour[node_inds_to_swap[0]], new_tour[node_inds_to_swap[1]] = new_tour[node_inds_to_swap[1]], new_tour[node_inds_to_swap[0]]
+    #     # swap the nodes
+    #     new_tour = self.tour_list.copy()
+    #     new_tour[node_inds_to_swap[0]], new_tour[node_inds_to_swap[1]] = new_tour[node_inds_to_swap[1]], new_tour[node_inds_to_swap[0]]
         
-        # update the tour list and distance using the tour_list setter
-        self.tour_list = {'tour':new_tour,'distance':new_distance}
+    #     # update the tour list and distance using the tour_list setter
+    #     self.tour_list = {'tour':new_tour,'distance':new_distance}
         
         
     def n_swap(self,n):
