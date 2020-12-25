@@ -6,7 +6,7 @@ Created on Sun Dec 13 14:59:32 2020
 """
 
 
-def make_tsp(incoming_data,obj_to_use):
+def make_tsp(incoming_data,obj_to_use,index_col=None):
     '''
     Read the data from multiple possible data types
     
@@ -26,6 +26,8 @@ def make_tsp(incoming_data,obj_to_use):
         Data to add to the provided object.
     obj_to_use : object TSP
         The object to add the data to.
+    index_col : int (zero indexed)
+        The column index that contains the index. None if not provided
 
     Returns
     -------
@@ -88,7 +90,7 @@ def make_tsp(incoming_data,obj_to_use):
         # path to csv file
         else:
             if isinstance(incoming_data,str):
-                dat_df = pd.read_csv(incoming_data)
+                dat_df = pd.read_csv(incoming_data,index_col = index_col)
                 return(make_tsp(incoming_data=dat_df,obj_to_use=obj_to_use))
         
     except ImportError:

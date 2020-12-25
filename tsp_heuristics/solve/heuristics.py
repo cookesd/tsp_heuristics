@@ -9,7 +9,7 @@ import copy
 import math
 import random
 
-def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='min',starting_temp=100,cooling_const=.995,**kwargs):
+def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='min',starting_temp=100,cooling_const=.995,verbose=True,**kwargs):
     '''
     Implements simulated annealing heuristic and returns best found solution
     
@@ -53,15 +53,17 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
         # check if generation_funct is string or functional
         # if string, use the instance method to generate temp solution
         if isinstance(generation_funct,str):
-            temp_sol = getattr(current_sol,generation_funct,default=None)(**kwargs)
+            temp_sol = getattr(current_sol,generation_funct,None)(**kwargs)
         else:
             temp_sol = generation_funct(current_sol,**kwargs)
             
         # check if better than current solution
-        if getattr(current_sol,compare_dict.get(direction,'__lt__'))(temp_sol):
+        if getattr(temp_sol,compare_dict.get(direction,'__lt__'))(current_sol):
+            if verbose:
+                print('Iteration {} better (old: {}, new: {})'.format(it,current_sol.distance,temp_sol.distance))
             current_sol = temp_sol
             # update the best solution if the temp sol is better
-            if getattr(current_sol,compare_dict.get(direction,'__lt__'))(best_sol):
+            if getattr(temp_sol,compare_dict.get(direction,'__lt__'))(best_sol):
                 best_sol = current_sol
         else:
             # if not, check if probability better than annealing acceptance prob
@@ -75,11 +77,6 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
         
     # return best solution
     return(best_sol)
-        
-    
-    
-    
-    
     
     
     

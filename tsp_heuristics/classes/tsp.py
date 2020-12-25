@@ -14,7 +14,7 @@ from tsp_heuristics.io.read_data import make_tsp
 from tsp_heuristics.sol_generators import random_tour_list, ordered_tour_list, greedy_tour_list
 
 class TSP(object):
-    def __init__(self,incoming_data=None):
+    def __init__(self,incoming_data=None,**kwargs):
         
         self.dist_dod = dict()
         self.nodes = set()
@@ -22,7 +22,7 @@ class TSP(object):
         # call a function to determine what format the data is in
         # then fill the dist_dod and nodes parameters accordingly
         if incoming_data is not None:
-            make_tsp(incoming_data,obj_to_use = self)
+            make_tsp(incoming_data,obj_to_use = self,**kwargs)
             
     def __str__(self):
         return 'this is the string representation'
@@ -425,7 +425,7 @@ class TSPTour(object):
             else:
                 # reorder the second tour list so we start with the same ourder as this tour list
                 reordered_list = tour2.tour_list[first_node_ind:len(tour2.tour_list)] + tour2.tour_list[0:first_node_ind]
-                return(all([i==j for i,j in zip(self.tour_list,reordered_list)]))
+            return(all([i==j for i,j in zip(self.tour_list,reordered_list)]))
             
     def __ne__(self,tour2):
         return(not self.__eq__(tour2))
@@ -601,12 +601,16 @@ class TSPTour(object):
         
         # swap the nodes
         # tour nodes in indices of dict values get placed in index of tour keys
-        new_tour = self.tour_list.copy()
+        new_tour_inst = deepcopy(self)
+        
+        new_tour_list = self.tour_list.copy()
         for ind, new_ind in replace_dict.items():
-            new_tour[ind] = self.tour_list[new_ind]
+            new_tour_list[ind] = self.tour_list[new_ind]
             
         # update the tour list and distance using the tour_list setter
-        self.tour_list = {'tour':new_tour,'distance':new_distance}
+        new_tour_inst.tour_list = {'tour':new_tour_list,'distance':new_distance}
+        
+        return(new_tour_inst)
         
     
 
