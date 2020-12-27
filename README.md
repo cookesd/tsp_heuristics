@@ -5,7 +5,7 @@ This package intends to implement heuristics for the Travelling Salesman Problem
 
 ## Proposed Heuristics
 
-- [Simulated Annealing](https://en.wikipedia.org/wiki/Simulated_annealing)
+- [Simulated Annealing](https://en.wikipedia.org/wiki/Simulated_annealing) *implemented*
 - [Genetic Algorithms](https://en.wikipedia.org/wiki/Genetic_algorithm)
 - [Tabu Search?](https://en.wikipedia.org/wiki/Tabu_search)
 
@@ -13,4 +13,10 @@ This package intends to implement heuristics for the Travelling Salesman Problem
 
 - Animation of historic TSP tours (`networkx`/`matplotlib`)
 - Line graph of historical tour lengths with best tour annotated (`plotnine`)
-- `networkx` drawing of best tour
+- `networkx` drawing of best tour *implemented*
+
+
+## TODO
+- Keep track of historic tours
+- Implement other heuristics
+- Build VehicleRoutingProblem (VRP) class (should inherit from TSP)
