@@ -10,6 +10,8 @@ Created on Fri Dec 11 12:12:13 2020
 import warnings
 import random
 from copy import copy, deepcopy
+import matplotlib.pyplot as plt
+import networkx as nx
 from tsp_heuristics.io.read_data import make_tsp
 from tsp_heuristics.sol_generators import random_tour_list, ordered_tour_list, greedy_tour_list
 
@@ -373,7 +375,7 @@ class TSPTour(object):
                 self._tour_list = tour_list_data['tour']
                 self.distance = tour_list_data.get('distance',self.get_distance())
             except KeyError as e:
-                print('Setting tour_list accepts the tour list as an iterable or a dict with keys {"tour","distance"}. "distance" key is optional')
+                print('Setting tour_list accepts the tour list as an iterable or a dict with keys {"tour","distance"}. "distance" key is optional.\n{}'.format(e))
         else:
             self._tour_list = tour_list_data
             self.distance = self.get_distance()
@@ -505,32 +507,6 @@ class TSPTour(object):
                 'delete':edges_to_delete})
         
         
-    # def two_swap(self):
-    #     node_inds_to_swap = random.sample(range(len(self.tour_list)),2)
-    #     # dictionary saying which node ind to replace each other node ind with
-    #     replace_dict = {node_inds_to_swap[0]:node_inds_to_swap[1],
-    #                     node_inds_to_swap[1]:node_inds_to_swap[0]}
-        
-        
-    #     add_del_edge_dict = self._get_add_del_edges(replace_dict)
-    #     edges_to_add = add_del_edge_dict['add']
-    #     edges_to_delete = add_del_edge_dict['delete']
-        
-    #     # add the distance of the edges to add and
-    #     # subtract the distance of edges to delete
-    #     new_distance = (self.distance 
-    #                     - sum([self.tsp.dist_dod[del_u][del_v] for del_u,del_v in edges_to_delete])
-    #                     + sum([self.tsp.dist_dod[add_u][add_v] for add_u,add_v in edges_to_add])
-    #                     )
-    #     # self.distance = new_distance
-        
-                
-    #     # swap the nodes
-    #     new_tour = self.tour_list.copy()
-    #     new_tour[node_inds_to_swap[0]], new_tour[node_inds_to_swap[1]] = new_tour[node_inds_to_swap[1]], new_tour[node_inds_to_swap[0]]
-        
-    #     # update the tour list and distance using the tour_list setter
-    #     self.tour_list = {'tour':new_tour,'distance':new_distance}
         
         
     def n_swap(self,n):
@@ -611,6 +587,66 @@ class TSPTour(object):
         new_tour_inst.tour_list = {'tour':new_tour_list,'distance':new_distance}
         
         return(new_tour_inst)
+    
+    def plot(self,start_color = 'red', other_color = 'blue',pos=None,layout_fct='circular_layout',**kwargs):
+        '''
+        Create a matplotlib plot of the tour
+
+        Parameters
+        ----------
+        start_color : string, optional
+            The color of the starting node (node 0 in the tour_list). The default is 'red'.
+        other_color : string, optional
+            The color of other nodes. The default is 'blue'.
+        pos : dict, optional
+            If provided, a dict keyed by nodes in tour_list with 2-tuple as items.
+            First tuple item is x location, second is y. The default is None.
+        layout_fct : string, optional
+            If pos is None, then the string representation of the function to build node positions.
+            See `networkx.layout.__all__` for available options. The default is 'circular_layout'.
+        **kwargs : TYPE
+            keyword arguments passed to layout_fct.
+
+        Returns
+        -------
+        None.
+
+        '''
+        layout_dict = {layout:getattr(nx.layout,layout) for layout in nx.layout.__all__}
+        # {'circular':nx.circluar_layout,
+        #                'spectral':nx.spectral_layout,
+        #                'spring':nx.spring_layout,
+        #                'shell':nx.shell_layout,
+        #                'spiral':nx.shell_layout,
+        #                'planar':nx.planar_layout}
+        g = nx.DiGraph()
+        g.add_weighted_edges_from([(u,v,self.tsp.dist_dod[u][v])
+                                        for u,v in [(self.tour_list[i],self.tour_list[i+1])
+                                                    for i in range(len(self.tour_list)-1)]
+                                        + [(self.tour_list[-1],self.tour_list[0])]])
+        color_dict = {**{self.tour_list[0]:start_color},
+                      **{node:other_color for node in self.tour_list[1:]}}
+        color_list = [start_color] + [other_color]*(len(self.tour_list) - 1)
+        
+        if pos is None:
+            pos = layout_dict.get(layout_fct,'circular_layout')(g)
+            
+        f = plt.figure(1)
+        ax = f.add_subplot(111)
+        nx.draw_networkx_nodes(g,pos=pos,ax=ax,node_color=color_list)
+        nx.draw_networkx_labels(g,pos=pos,ax=ax)
+        nx.draw_networkx_edges(g,pos=pos,ax=ax)
+        nx.draw_networkx_edge_labels(g,pos=pos,ax=ax,edge_labels = {(u,v):dist
+                                                                    for u,v,dist in g.edges(data='weight')})
+        
+        ax.plot([0],[0],color=start_color,label='Starting Node')
+        ax.plot([0],[0],color=other_color,label='Other Nodes')
+        plt.title('Tour Distance: {}'.format(self.distance))
+        plt.axis('off')
+        plt.legend()
+        f.tight_layout()
+        
+        return(f)
         
     
 
