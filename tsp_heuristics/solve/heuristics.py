@@ -8,8 +8,9 @@ Created on Thu Dec 24 12:00:25 2020
 import copy
 import math
 import random
+from tsp_heuristics.classes.results import SimAnnealRes
 
-def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='min',starting_temp=100,cooling_const=.995,verbose=True,**kwargs):
+def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='min',starting_temp=100,cooling_const=.995,verbose=False,**kwargs):
     '''
     Implements simulated annealing heuristic and returns best found solution
     
@@ -44,9 +45,12 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
     
     compare_dict = {'min':'__lt__','max':'__gt__'}
     
+    sol_list = [None] * (num_iter + 1)
     # store current solution and best solution
     current_sol = copy.deepcopy(starting_sol)
     best_sol = copy.deepcopy(starting_sol)
+    best_it = 0
+    sol_list[0] = current_sol
     # iterate for num_iter
     for it in range(num_iter):
         # make temp solution (deepcopy of curr solution)
@@ -57,6 +61,7 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
         else:
             temp_sol = generation_funct(current_sol,**kwargs)
             
+        sol_list[it+1] = temp_sol
         # check if better than current solution
         if getattr(temp_sol,compare_dict.get(direction,'__lt__'))(current_sol):
             if verbose:
@@ -65,6 +70,7 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
             # update the best solution if the temp sol is better
             if getattr(temp_sol,compare_dict.get(direction,'__lt__'))(best_sol):
                 best_sol = current_sol
+                best_it = it + 1
         else:
             # if not, check if probability better than annealing acceptance prob
             # if temp_sol.distance close to current_sol.distance then probability higher
@@ -76,7 +82,9 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
                 current_sol = temp_sol
         
     # return best solution
-    return(best_sol)
+    
+    res = SimAnnealRes(sol_list,best_it,best_sol)
+    return(res)
     
     
     

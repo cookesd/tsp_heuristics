@@ -15,4 +15,8 @@ nfl_tsp = th.TSP(data_file,index_col=0)
 
 starting_tour = th.TSPTour.from_tsp(nfl_tsp,'random')
 
-final_sol = th.simulated_annealing(starting_tour,'n_swap',n=3,num_iter=5)
+final_sol = th.simulated_annealing(starting_tour,'n_swap',n=3,num_iter=100000)
+
+print(final_sol)
+
+final_sol.plot()
