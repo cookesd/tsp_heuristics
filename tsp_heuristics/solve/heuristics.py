@@ -44,7 +44,7 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
     '''
     
     compare_dict = {'min':'__lt__','max':'__gt__'}
-    
+    it_cooling_const = 1
     sol_list = [None] * (num_iter + 1)
     # store current solution and best solution
     current_sol = copy.deepcopy(starting_sol)
@@ -53,6 +53,8 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
     sol_list[0] = current_sol
     # iterate for num_iter
     for it in range(num_iter):
+        # update the cooling constant based on the iteration
+        it_cooling_const *= cooling_const # equals cooling_const^(it+1)
         # make temp solution (deepcopy of curr solution)
         # check if generation_funct is string or functional
         # if string, use the instance method to generate temp solution
@@ -75,8 +77,8 @@ def simulated_annealing(starting_sol,generation_funct,num_iter=1000,direction='m
             # if not, check if probability better than annealing acceptance prob
             # if temp_sol.distance close to current_sol.distance then probability higher
             # use abs in case we want to maximize (temp will be less than)
-            acceptProb = math.exp(-(starting_temp*(abs(temp_sol.distance-current_sol.distance)
-                                                   /current_sol.distance)*cooling_const))
+            acceptProb = 1 - math.exp(-(starting_temp*(abs(temp_sol.distance-current_sol.distance)
+                                                   /current_sol.distance)*it_cooling_const))
             testProb = random.random()
             if testProb < acceptProb:
                 current_sol = temp_sol
