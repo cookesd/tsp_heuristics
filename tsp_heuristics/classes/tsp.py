@@ -619,6 +619,11 @@ class TSPTour(object):
         #                'shell':nx.shell_layout,
         #                'spiral':nx.shell_layout,
         #                'planar':nx.planar_layout}
+        # need to make my own bipartite layout to put nodes in tour_list order
+        # or at least
+        default_kwargs = {'bipartite_layout':{'nodes':[node for i,node in enumerate(self.tour_list)
+                                                       if i %2 == 0],
+                                              'align':'vertical'}}
         g = nx.DiGraph()
         g.add_weighted_edges_from([(u,v,self.tsp.dist_dod[u][v])
                                         for u,v in [(self.tour_list[i],self.tour_list[i+1])
@@ -629,7 +634,8 @@ class TSPTour(object):
         color_list = [start_color] + [other_color]*(len(self.tour_list) - 1)
         
         if pos is None:
-            pos = layout_dict.get(layout_fct,'circular_layout')(g)
+            pos = layout_dict.get(layout_fct,'circular_layout')(g,**{**default_kwargs.get(layout_fct,{}),
+                                                                     **kwargs})
             
         f = plt.figure(1)
         ax = f.add_subplot(111)
@@ -637,7 +643,8 @@ class TSPTour(object):
         nx.draw_networkx_labels(g,pos=pos,ax=ax)
         nx.draw_networkx_edges(g,pos=pos,ax=ax)
         nx.draw_networkx_edge_labels(g,pos=pos,ax=ax,edge_labels = {(u,v):dist
-                                                                    for u,v,dist in g.edges(data='weight')})
+                                                                    for u,v,dist in g.edges(data='weight')},
+                                     label_pos = 0.4)
         
         ax.plot([0],[0],color=start_color,label='Starting Node')
         ax.plot([0],[0],color=other_color,label='Other Nodes')

@@ -19,4 +19,4 @@ final_sol = th.simulated_annealing(starting_tour,'n_swap',n=3,num_iter=10000)
 
 print(final_sol)
 
-final_sol.plot()
+my_plot = final_sol.plot()
