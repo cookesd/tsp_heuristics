@@ -12,7 +12,7 @@ This package intends to implement heuristics for the Travelling Salesman Problem
 ## Proposed Visualizations
 
 - Animation of historic TSP tours (`networkx`/`matplotlib`)
-- Line graph of historical tour lengths with best tour annotated (`plotnine`)
+- Line graph of historical tour lengths with best tour annotated (`matplotlib` *implemented* / `plotnine`)
 - `networkx` drawing of best tour *implemented*
 
 
